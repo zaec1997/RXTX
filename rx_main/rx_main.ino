@@ -87,6 +87,8 @@ void loop() {
   // ---- Channel ----
   if (msg.startsWith("SET,")) {
     uint8_t idx = msg.substring(4).toInt();
+    Serial.print("[RX] SET_CHANNEL idx=");
+    Serial.println(idx);
     vrxMgr.setChannel(idx);
 
     LoRa.idle();
