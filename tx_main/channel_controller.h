@@ -13,6 +13,9 @@ public:
   // call every loop()
   void loop();
 
+  // call when ACK packet received
+  void handleAck();
+
   bool isWaitingAck() const { return waitingAck; }
   uint8_t currentChannel() const { return currentIdx; }
 

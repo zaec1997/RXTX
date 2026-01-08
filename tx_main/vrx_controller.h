@@ -41,15 +41,12 @@ public:
       pendingSend = true;
       Serial.println("[VRX] ACK TIMEOUT");
     }
+  }
 
-    int sz = lora->parsePacket();
-    if (sz == sizeof(Packet)) {
-      Packet p;
-      lora->readBytes((uint8_t*)&p, sizeof(p));
-      if (checkCRC(p) && p.cmd == CMD_ACK) {
-        waitingAck = false;
-        Serial.println("[VRX] GOT ACK");
-      }
+  void handleAck(const Packet &p) {
+    if (waitingAck && checkCRC(p) && p.cmd == CMD_ACK) {
+      waitingAck = false;
+      Serial.println("[VRX] GOT ACK");
     }
   }
 

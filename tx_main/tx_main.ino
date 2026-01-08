@@ -5,6 +5,7 @@
 #include <Adafruit_SSD1306.h>
 #include "channel_controller.h"
 #include "vrx_controller.h"
+#include "protocol.h"
 
 // ================= OLED =================
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -236,6 +237,18 @@ void loop() {
   }
 
   btnPrev = btn;
+
+  // ---------- LoRa RX (ACK handling) ----------
+  int ps = LoRa.parsePacket();
+  if (ps == sizeof(Packet)) {
+    Packet p;
+    LoRa.readBytes((uint8_t*)&p, sizeof(p));
+    if (checkCRC(p) && p.cmd == CMD_ACK) {
+      channelCtrl.handleAck();
+      vrxCtrl.handleAck(p);
+    }
+    LoRa.receive();
+  }
 
   // Update UI if anything changed
   if (uiDirty || channelCtrl.isWaitingAck() != vrxCtrl.isWaitingAck()) {

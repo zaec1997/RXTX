@@ -41,16 +41,11 @@ void ChannelController::loop() {
     pendingSend = true;
     Serial.println("[CH] ACK TIMEOUT");
   }
+}
 
-  // ---- RX ACK ----
-  int sz = lora->parsePacket();
-  if (sz == sizeof(Packet)) {
-    Packet p;
-    lora->readBytes((uint8_t*)&p, sizeof(p));
-
-    if (checkCRC(p) && p.cmd == CMD_ACK) {
-      waitingAck = false;
-      Serial.println("[CH] GOT ACK");
-    }
+void ChannelController::handleAck() {
+  if (waitingAck) {
+    waitingAck = false;
+    Serial.println("[CH] GOT ACK");
   }
 }
