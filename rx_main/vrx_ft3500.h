@@ -27,15 +27,15 @@ public:
     uint8_t band = idx / 8;   // 0..7
     uint8_t ch   = idx % 8;   // 0..7
 
-    // Band → CS
-    digitalWrite(CS1, band & 0x01);
-    digitalWrite(CS2, band & 0x02);
-    digitalWrite(CS3, band & 0x04);
+    // Band → CS (explicit HIGH/LOW)
+    digitalWrite(CS1, (band & 0x01) ? HIGH : LOW);
+    digitalWrite(CS2, (band & 0x02) ? HIGH : LOW);
+    digitalWrite(CS3, (band & 0x04) ? HIGH : LOW);
 
-    // Channel → S
-    digitalWrite(S1, ch & 0x01);
-    digitalWrite(S2, ch & 0x02);
-    digitalWrite(S3, ch & 0x04);
+    // Channel → S (explicit HIGH/LOW)
+    digitalWrite(S1, (ch & 0x01) ? HIGH : LOW);
+    digitalWrite(S2, (ch & 0x02) ? HIGH : LOW);
+    digitalWrite(S3, (ch & 0x04) ? HIGH : LOW);
   }
 
 private:
