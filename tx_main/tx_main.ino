@@ -246,12 +246,13 @@ void loop() {
     if (checkCRC(p) && p.cmd == CMD_ACK) {
       channelCtrl.handleAck();
       vrxCtrl.handleAck(p);
+      uiDirty = true;  // ACK received, update UI
     }
     LoRa.receive();
   }
 
   // Update UI if anything changed
-  if (uiDirty || channelCtrl.isWaitingAck() != vrxCtrl.isWaitingAck()) {
+  if (uiDirty) {
     drawUI();
   }
 }
