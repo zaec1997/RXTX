@@ -5,9 +5,9 @@
 /*
   VRX_SteadyView
   ---------------
-  - UART control (1-в-1 як у окулярів)
+  - UART control
   - постійний poll
-  - ACTIVE detection
+  - ACTIVE detection + timeout
   - resend last channel after ACTIVE (resync)
 */
 
@@ -16,20 +16,20 @@ public:
   VRX_SteadyView(HardwareSerial &s, int rxPin, int txPin)
     : serial(s), rx(rxPin), tx(txPin) {}
 
-  // --------------------
-  // Init
-  // --------------------
   void begin() override {
     serial.begin(115200, SERIAL_8N1, rx, tx);
     lastPoll = millis();
     active = false;
     needResync = false;
+    lastActiveSeen = 0;
   }
 
-  // --------------------
-  // Main loop
-  // --------------------
   void loop() override {
+    // ---- check active timeout ----
+    if (active && lastActiveSeen != 0 && (millis() - lastActiveSeen > ACTIVE_TIMEOUT_MS)) {
+      active = false;
+      Serial.println("[SVX] ACTIVE lost");
+    }
 
     // ---- poll ----
     if (millis() - lastPoll > 820) {
@@ -43,34 +43,32 @@ public:
       uint8_t b = serial.read();
 
       // ACTIVE frame detected
-      if (b == 0xB3 && !active) {
-        active = true;
-
-        // resync last channel
-        if (needResync) {
-          sendSet(lastIdx);
-          needResync = false;
+      if (b == 0xB3) {
+        lastActiveSeen = millis();
+        if (!active) {
+          active = true;
+          Serial.println("[SVX] ACTIVE detected");
+          // resync last channel
+          if (needResync) {
+            sendSet(lastIdx);
+            needResync = false;
+          }
         }
       }
     }
   }
 
-  // --------------------
-  // State
-  // --------------------
   bool isActive() override {
     return active;
   }
 
-  // --------------------
-  // Set channel
-  // --------------------
   void setChannel(uint8_t idx) override {
     lastIdx = idx;
 
     if (!active) {
       // remember and send later
       needResync = true;
+      Serial.println("[SVX] channel saved for resync");
       return;
     }
 
@@ -78,9 +76,6 @@ public:
   }
 
 private:
-  // --------------------
-  // Low-level send
-  // --------------------
   void sendSet(uint8_t idx) {
     uint8_t pkt[6];
     pkt[0] = 0x02;
@@ -107,6 +102,10 @@ private:
   uint8_t lastIdx = 0;
 
   unsigned long lastPoll = 0;
+  unsigned long lastActiveSeen = 0;
+  // Timeout value tuned for SteadyView X hardware polling rate (820ms)
+  // Should be > 2x poll interval to avoid false timeouts
+  static constexpr unsigned long ACTIVE_TIMEOUT_MS = 2000;
 
   const uint8_t pollPkt[6] = {
     0x02, 0x06, 0x33, 0x80, 0xB5, 0x03

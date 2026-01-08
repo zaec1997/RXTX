@@ -6,6 +6,7 @@
 #include "vrx_steadyview.h"
 #include "vrx_ft3500.h"
 #include "video_switch.h"
+#include "protocol.h"
 
 // ---------- LoRa ----------
 #define LORA_SS   5
@@ -27,28 +28,11 @@ VRX_Manager vrxMgr;
 VideoSwitch videoSwitch;
 
 void setup() {
-
-
-
-
-
   Serial.begin(115200);
   delay(500);
   Serial.println("FPV RX START");
 
-
-videoSwitch.begin(27);
-
-videoSwitch.select(0);
-delay(2000);
-
-videoSwitch.select(1);
-delay(2000);
-
-videoSwitch.select(2);
-delay(2000);
-
-  // --- VRX ---
+  // --- VRX registration ---
   vrxMgr.add(&vrx0);
   vrxMgr.add(&vrx1);
   vrxMgr.begin();
@@ -72,19 +56,75 @@ delay(2000);
   Serial.println("RX READY");
 }
 
+void sendAck() {
+  Packet ack;
+  ack.cmd = CMD_ACK;
+  ack.arg1 = 0;
+  ack.arg2 = 0;
+  ack.crc = calcCRC(ack);
+
+  LoRa.idle();
+  LoRa.beginPacket();
+  LoRa.write((uint8_t*)&ack, sizeof(ack));
+  LoRa.endPacket();
+  LoRa.receive();
+}
+
+void handlePacket(const Packet &p) {
+  if (!checkCRC(p)) {
+    Serial.println("[RX] bad CRC");
+    return;
+  }
+
+  switch (p.cmd) {
+    case CMD_SET_CHANNEL:
+      Serial.print("[RX] SET_CHANNEL idx=");
+      Serial.println(p.arg1);
+      vrxMgr.setChannel(p.arg1);
+      sendAck();
+      break;
+
+    case CMD_SET_VRX:
+      Serial.print("[RX] SET_VRX id=");
+      Serial.println(p.arg1);
+      vrxMgr.setActive(p.arg1);
+      videoSwitch.select(p.arg1);
+      sendAck();
+      break;
+
+    case CMD_PING:
+      // optional: reply
+      break;
+
+    default:
+      Serial.print("[RX] unknown cmd=");
+      Serial.println(p.cmd, HEX);
+      break;
+  }
+}
+
 void loop() {
   vrxMgr.loop();
 
   int ps = LoRa.parsePacket();
   if (!ps) return;
 
+  // if packet size equals Packet, read binary
+  if (ps == sizeof(Packet)) {
+    Packet p;
+    LoRa.readBytes((uint8_t*)&p, sizeof(p));
+    handlePacket(p);
+    LoRa.receive();
+    return;
+  }
+
+  // fallback: textual handling for compatibility
   String msg;
   while (LoRa.available()) msg += (char)LoRa.read();
 
-  Serial.print("[RX] ");
+  Serial.print("[RX][TEXT] ");
   Serial.println(msg);
 
-  // ---- Channel ----
   if (msg.startsWith("SET,")) {
     uint8_t idx = msg.substring(4).toInt();
     vrxMgr.setChannel(idx);
@@ -97,7 +137,6 @@ void loop() {
     return;
   }
 
-  // ---- VRX select ----
   if (msg.startsWith("VRX,")) {
     uint8_t id = msg.substring(4).toInt();
 
