@@ -45,9 +45,12 @@ public:
       // ACTIVE frame detected
       if (b == 0xB3 && !active) {
         active = true;
+        Serial.println("[VRX_SteadyView] ACTIVE detected");
 
         // resync last channel
         if (needResync) {
+          Serial.print("[VRX_SteadyView] resync idx=");
+          Serial.println(lastIdx);
           sendSet(lastIdx);
           needResync = false;
         }
@@ -71,9 +74,13 @@ public:
     if (!active) {
       // remember and send later
       needResync = true;
+      Serial.print("[VRX_SteadyView] setChannel NOT ACTIVE, queue resync idx=");
+      Serial.println(idx);
       return;
     }
 
+    Serial.print("[VRX_SteadyView] setChannel ACTIVE, send idx=");
+    Serial.println(idx);
     sendSet(idx);
   }
 
