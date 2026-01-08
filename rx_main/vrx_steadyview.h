@@ -70,10 +70,15 @@ public:
 
     if (!active) {
       // remember and send later
+      Serial.print("[SteadyView] setChannel idx=");
+      Serial.print(idx);
+      Serial.println(" - NOT ACTIVE, will resync");
       needResync = true;
       return;
     }
 
+    Serial.print("[SteadyView] setChannel idx=");
+    Serial.println(idx);
     sendSet(idx);
   }
 
