@@ -33,8 +33,10 @@ public:
     if (count == 0) return;
     if (active >= count) return;
     if (!vrx[active]) return;
-    if (vrx[active]->isActive())
-      vrx[active]->setChannel(idx);
+    
+    Serial.print("[VRX_MGR] forward setChannel idx=");
+    Serial.println(idx);
+    vrx[active]->setChannel(idx);
   }
 
 private:
