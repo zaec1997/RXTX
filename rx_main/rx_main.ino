@@ -56,6 +56,20 @@ void setup() {
   Serial.println("RX READY");
 }
 
+void sendAck() {
+  Packet ack;
+  ack.cmd = CMD_ACK;
+  ack.arg1 = 0;
+  ack.arg2 = 0;
+  ack.crc = calcCRC(ack);
+
+  LoRa.idle();
+  LoRa.beginPacket();
+  LoRa.write((uint8_t*)&ack, sizeof(ack));
+  LoRa.endPacket();
+  LoRa.receive();
+}
+
 void handlePacket(const Packet &p) {
   if (!checkCRC(p)) {
     Serial.println("[RX] bad CRC");
@@ -67,21 +81,7 @@ void handlePacket(const Packet &p) {
       Serial.print("[RX] SET_CHANNEL idx=");
       Serial.println(p.arg1);
       vrxMgr.setChannel(p.arg1);
-
-      // send ACK (binary)
-      {
-        Packet ack;
-        ack.cmd = CMD_ACK;
-        ack.arg1 = 0;
-        ack.arg2 = 0;
-        ack.crc = calcCRC(ack);
-
-        LoRa.idle();
-        LoRa.beginPacket();
-        LoRa.write((uint8_t*)&ack, sizeof(ack));
-        LoRa.endPacket();
-        LoRa.receive();
-      }
+      sendAck();
       break;
 
     case CMD_SET_VRX:
@@ -89,20 +89,7 @@ void handlePacket(const Packet &p) {
       Serial.println(p.arg1);
       vrxMgr.setActive(p.arg1);
       videoSwitch.select(p.arg1);
-
-      {
-        Packet ack;
-        ack.cmd = CMD_ACK;
-        ack.arg1 = 0;
-        ack.arg2 = 0;
-        ack.crc = calcCRC(ack);
-
-        LoRa.idle();
-        LoRa.beginPacket();
-        LoRa.write((uint8_t*)&ack, sizeof(ack));
-        LoRa.endPacket();
-        LoRa.receive();
-      }
+      sendAck();
       break;
 
     case CMD_PING:

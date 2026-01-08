@@ -103,6 +103,8 @@ private:
 
   unsigned long lastPoll = 0;
   unsigned long lastActiveSeen = 0;
+  // Timeout value tuned for SteadyView X hardware polling rate (820ms)
+  // Should be > 2x poll interval to avoid false timeouts
   static constexpr unsigned long ACTIVE_TIMEOUT_MS = 2000;
 
   const uint8_t pollPkt[6] = {

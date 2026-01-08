@@ -245,7 +245,7 @@ void loop() {
     LoRa.readBytes((uint8_t*)&p, sizeof(p));
     if (checkCRC(p) && p.cmd == CMD_ACK) {
       channelCtrl.handleAck();
-      vrxCtrl.handleAck(p);
+      vrxCtrl.handleAck();
       uiDirty = true;  // ACK received, update UI
     }
     LoRa.receive();

@@ -43,8 +43,8 @@ public:
     }
   }
 
-  void handleAck(const Packet &p) {
-    if (waitingAck && checkCRC(p) && p.cmd == CMD_ACK) {
+  void handleAck() {
+    if (waitingAck) {
       waitingAck = false;
       Serial.println("[VRX] GOT ACK");
     }
