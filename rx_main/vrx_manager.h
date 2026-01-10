@@ -33,8 +33,7 @@ public:
     if (count == 0) return;
     if (active >= count) return;
     if (!vrx[active]) return;
-    if (vrx[active]->isActive())
-      vrx[active]->setChannel(idx);
+    vrx[active]->setChannel(idx);
   }
 
   // Get RSSI from active VRX

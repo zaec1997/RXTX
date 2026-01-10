@@ -114,20 +114,21 @@ void drawUI() {
     display.print(c.band);
     display.print(c.ch);
 
-    display.setCursor(0,28);
+    display.setCursor(0,26);
     display.print("Freq: ");
     if (c.freq) display.print(c.freq);
     else display.print("CUST");
 
-    display.setCursor(0,40);
+    display.setCursor(0,36);
     display.print("VRX: ");
     display.print(vrxNames[vrxIndex]);
 
-    display.setCursor(0,52);
+    display.setCursor(0,46);
     display.print("RSSI: ");
     display.print(rxRssi1 / 100.0, 1);
     display.print("/");
     display.print(rxRssi2 / 100.0, 1);
+    display.print("dB");
 
     display.setCursor(0,56);
     display.print(waitingAck ? "WAIT ACK" : "READY");
