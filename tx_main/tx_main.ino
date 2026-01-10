@@ -30,6 +30,11 @@ bool pendingSend = false;
 unsigned long waitStart = 0;
 const unsigned long ACK_TIMEOUT = 800;
 
+// RSSI telemetry from RX
+int16_t rxRssi1 = 0;
+int16_t rxRssi2 = 0;
+unsigned long lastRssiUpdate = 0;
+
 // ================= Channels =================
 struct Channel {
   char band;
@@ -117,6 +122,12 @@ void drawUI() {
     display.setCursor(0,40);
     display.print("VRX: ");
     display.print(vrxNames[vrxIndex]);
+
+    display.setCursor(0,52);
+    display.print("RSSI: ");
+    display.print(rxRssi1 / 100.0, 1);
+    display.print("/");
+    display.print(rxRssi2 / 100.0, 1);
 
     display.setCursor(0,56);
     display.print(waitingAck ? "WAIT ACK" : "READY");
@@ -273,9 +284,21 @@ void loop() {
   if (ps) {
     String msg;
     while (LoRa.available()) msg += (char)LoRa.read();
+    
     if (msg.startsWith("ACK")) {
       waitingAck = false;
       uiDirty = true;
+    } else if (msg.startsWith("RSSI,")) {
+      // Parse RSSI message: "RSSI,<ant1>,<ant2>"
+      int firstComma = msg.indexOf(',');
+      int secondComma = msg.indexOf(',', firstComma + 1);
+      
+      if (firstComma > 0 && secondComma > firstComma) {
+        rxRssi1 = msg.substring(firstComma + 1, secondComma).toInt();
+        rxRssi2 = msg.substring(secondComma + 1).toInt();
+        lastRssiUpdate = millis();
+        uiDirty = true;
+      }
     }
     LoRa.receive();
   }

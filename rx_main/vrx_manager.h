@@ -37,6 +37,21 @@ public:
       vrx[active]->setChannel(idx);
   }
 
+  // Get RSSI from active VRX
+  int16_t getRSSI1() {
+    if (count == 0) return 0;
+    if (active >= count) return 0;
+    if (!vrx[active]) return 0;
+    return vrx[active]->getRSSI1();
+  }
+
+  int16_t getRSSI2() {
+    if (count == 0) return 0;
+    if (active >= count) return 0;
+    if (!vrx[active]) return 0;
+    return vrx[active]->getRSSI2();
+  }
+
 private:
   VRX* vrx[MAX_SLOTS];
   uint8_t count;
