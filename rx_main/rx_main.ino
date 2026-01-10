@@ -26,6 +26,10 @@ VRX_FT3500 vrx1(
 VRX_Manager vrxMgr;
 VideoSwitch videoSwitch;
 
+// RSSI telemetry
+unsigned long lastRssiSend = 0;
+const unsigned long RSSI_SEND_INTERVAL = 500; // Send RSSI every 500ms
+
 void setup() {
 
 
@@ -74,6 +78,23 @@ delay(2000);
 
 void loop() {
   vrxMgr.loop();
+
+  // Send RSSI telemetry periodically
+  if (millis() - lastRssiSend > RSSI_SEND_INTERVAL) {
+    int16_t rssi1 = vrxMgr.getRSSI1();
+    int16_t rssi2 = vrxMgr.getRSSI2();
+    
+    LoRa.idle();
+    LoRa.beginPacket();
+    LoRa.print("RSSI,");
+    LoRa.print(rssi1);
+    LoRa.print(",");
+    LoRa.print(rssi2);
+    LoRa.endPacket();
+    LoRa.receive();
+    
+    lastRssiSend = millis();
+  }
 
   int ps = LoRa.parsePacket();
   if (!ps) return;
