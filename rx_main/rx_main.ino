@@ -75,6 +75,21 @@ delay(2000);
 void loop() {
   vrxMgr.loop();
 
+  // ---- Check for RSSI updates and send telemetry ----
+  if (vrx0.consumeRssiUpdated()) {
+    float rssiA = vrx0.getLastRssiDbmA();
+    float rssiB = vrx0.getLastRssiDbmB();
+    
+    LoRa.idle();
+    LoRa.beginPacket();
+    LoRa.print("RSSI,");
+    LoRa.print(rssiA, 1);
+    LoRa.print(",");
+    LoRa.print(rssiB, 1);
+    LoRa.endPacket();
+    LoRa.receive();
+  }
+
   int ps = LoRa.parsePacket();
   if (!ps) return;
 
